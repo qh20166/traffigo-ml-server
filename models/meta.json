@@ -1,0 +1,46 @@
+{
+  "target": "currentSpeed",
+  "numeric_features": [
+    "freeFlowSpeed",
+    "speedLimit",
+    "hourOfDay",
+    "dayOfWeek",
+    "laneCount_aggregated",
+    "intersectionCount",
+    "routeSlopePercent",
+    "curvatureIndex",
+    "lengthKm",
+    "precipitation_sum",
+    "windspeed_10m_max",
+    "temperature_2m_max"
+  ],
+  "categorical_features": [
+    "roadType",
+    "surface",
+    "dayType"
+  ],
+  "one_hot_columns": [
+    "roadType_footway",
+    "roadType_primary",
+    "roadType_residential",
+    "roadType_secondary",
+    "roadType_service",
+    "roadType_tertiary",
+    "roadType_trunk",
+    "roadType_unknown",
+    "surface_asphalt",
+    "surface_concrete",
+    "dayType_weekday",
+    "dayType_weekend"
+  ],
+  "metrics": {
+    "mae_kmh": 1.84,
+    "rmse_kmh": 2.52,
+    "r2": 0.941,
+    "baseline_freeflow_mae_kmh": 8.25,
+    "n_test": 7452
+  },
+  "n_samples": 149023,
+  "has_weather": true,
+  "sklearn_version": "1.8.0"
+}

@@ -1,0 +1,16 @@
+# Khóa API và cấu hình cá nhân — KHÔNG commit
+local.properties
+*.local
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Tệp tạm
+*.log
+models/_test*.joblib
+.DS_Store
+Thumbs.db
