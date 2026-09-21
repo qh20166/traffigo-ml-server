@@ -45,6 +45,9 @@ GEOMETRY_CSV = os.path.join(APP_DIR, "app", "src", "main", "assets", "geometry.c
 REFRESH_ENABLED = os.environ.get("TRAFFIGO_REFRESH_DISABLE", "") != "1"
 REFRESH_INTERVAL = int(os.environ.get("TRAFFIGO_REFRESH_INTERVAL", "900"))   # giây
 REFRESH_MAX_SEGMENTS = int(os.environ.get("TRAFFIGO_REFRESH_MAX", "50"))
+# Giá trị chạy-time (admin dashboard có thể đổi lúc chạy)
+REFRESH_CFG = {"interval": REFRESH_INTERVAL, "enabled": REFRESH_ENABLED}
+_refresh_wakeup = None  # threading.Event, tạo ở startup
 
 app = FastAPI(
     title="TraffiGo ML Server",
@@ -429,7 +432,7 @@ def _refresh_cycle():
         "lastCycleAt": datetime.now().isoformat(timespec="seconds"),
         "lastOk": ok,
         "lastFail": fail,
-        "nextAt": datetime.fromtimestamp(time.time() + REFRESH_INTERVAL).isoformat(timespec="seconds"),
+        "nextAt": datetime.fromtimestamp(time.time() + REFRESH_CFG["interval"]).isoformat(timespec="seconds"),
     })
     print(f"[refresher] Chu kỳ #{REFRESH_STATE['cycles']}: OK={ok} FAIL={fail} "
           f"(tổng {len(LIVE_DATA)} đoạn có dữ liệu)")
@@ -440,20 +443,29 @@ def _refresher_loop():
         print("[refresher] TẮT: không tìm thấy TOMTOM_KEYS (env hoặc local.properties)")
         REFRESH_STATE["enabled"] = False
         return
-    print(f"[refresher] Bật: {len(MONITORED_SEGMENTS)} đoạn, chu kỳ {REFRESH_INTERVAL}s, {len(_tomtom_keys)} key")
+    print(f"[refresher] Bật: {len(MONITORED_SEGMENTS)} đoạn, chu kỳ {REFRESH_CFG['interval']}s, {len(_tomtom_keys)} key")
     while True:
+        if not REFRESH_CFG["enabled"]:
+            time.sleep(2)
+            _refresh_wakeup.clear()
+            continue
         try:
             _refresh_cycle()
         except Exception as e:
             print(f"[refresher] Lỗi chu kỳ: {e}")
-        time.sleep(REFRESH_INTERVAL)
+        # chờ đủ chu kỳ HOẶC bị đánh thức bởi nút "Quét ngay"
+        _refresh_wakeup.wait(timeout=REFRESH_CFG["interval"])
+        _refresh_wakeup.clear()
 
 
 @app.on_event("startup")
 def _start_refresher():
-    global MONITORED_SEGMENTS
+    global MONITORED_SEGMENTS, _refresh_wakeup
     MONITORED_SEGMENTS = _load_monitored_segments()
-    if REFRESH_ENABLED and MONITORED_SEGMENTS:
+    _refresh_wakeup = threading.Event()
+    _ADMIN_STATE["_refresh_wakeup"] = _refresh_wakeup
+    _ADMIN_STATE["MONITORED_SEGMENTS"] = MONITORED_SEGMENTS
+    if REFRESH_CFG["enabled"] and MONITORED_SEGMENTS:
         threading.Thread(target=_refresher_loop, daemon=True).start()
 
 
@@ -552,3 +564,16 @@ def api_traffic_status(req: TrafficStatusRequest):
         },
         "predictions": preds,
     }
+
+
+# ============================== Gắn trang quản trị /admin ==============================
+from admin_ui import register_admin
+
+_ADMIN_STATE = {
+    "REFRESH_STATE": REFRESH_STATE, "REFRESH_CFG": REFRESH_CFG,
+    "_refresh_wakeup": None,  # gán lại ở startup bên dưới
+    "_tomtom_keys": _tomtom_keys,
+    "MONITORED_SEGMENTS": MONITORED_SEGMENTS, "LIVE_DATA": LIVE_DATA,
+    "SPEED_MODEL": SPEED_MODEL, "CLUSTER": CLUSTER, "MODEL_META": MODEL_META,
+}
+register_admin(app, _ADMIN_STATE)
