@@ -10,7 +10,7 @@ Dự đoán tốc độ lưu thông, mức độ kẹt xe, rủi ro sự cố v�
 |---|---|
 | `app.py` | REST API FastAPI — 7 endpoint `/api/ml/*` + `/health` + bộ refresher dữ liệu live |
 | `train_model.py` | Pipeline huấn luyện: đọc snapshot, làm sạch, join thời tiết, huấn luyện Random Forest, xuất model |
-| `models/speed_rf.joblib` | Mô hình Random Forest đã huấn luyện (nén level 9, ~74 MB) |
+| `models/speed_rf.joblib` | Mô hình Random Forest đã huấn luyện (cấu hình lite cho RAM 512MB, nén level 9, ~14 MB) |
 | `models/cluster_model.json` | Mô hình gom cụm K-Means k=6 của đồ án (dùng chung với app Android) |
 | `models/meta.json` | Thông tin đặc trưng + chỉ số đánh giá của lần train gần nhất |
 | `hcmc_weather_daily.json` | Dữ liệu thời tiết ngày TP.HCM (Open-Meteo Archive) dùng khi train |
@@ -19,9 +19,9 @@ Dự đoán tốc độ lưu thông, mức độ kẹt xe, rủi ro sự cố v�
 
 | Chỉ số | Random Forest | Baseline (dự đoán = freeFlow) |
 |---|---|---|
-| MAE | **1,84 km/h** | 8,25 km/h |
-| RMSE | 2,52 km/h | — |
-| R² | 0,941 | — |
+| MAE | **2,19 km/h** | 8,25 km/h |
+| RMSE | 2,94 km/h | — |
+| R² | 0,919 | — |
 
 - Tập huấn luyện: 171 snapshot TomTom (09/03–15/04/2026), 149.023 mẫu / 917 đoạn đường, 100% có dữ liệu thời tiết
 - Mô hình gom cụm: K-Means k=6 trên nhánh Feature Selection (Silhouette 0,4183; DBI 0,8063; Calinski–Harabasz 147.574,6)

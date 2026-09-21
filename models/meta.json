@@ -34,9 +34,9 @@
     "dayType_weekend"
   ],
   "metrics": {
-    "mae_kmh": 1.84,
-    "rmse_kmh": 2.52,
-    "r2": 0.941,
+    "mae_kmh": 2.19,
+    "rmse_kmh": 2.94,
+    "r2": 0.919,
     "baseline_freeflow_mae_kmh": 8.25,
     "n_test": 7452
   },

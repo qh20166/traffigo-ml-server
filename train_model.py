@@ -128,9 +128,12 @@ def main():
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.05, random_state=42)
 
+    # Cấu hình "lite" cho môi trường 512MB RAM (Render free):
+    # 60 cây + giới hạn độ sâu + lá dày hơn -> bộ nhớ ~1/3, độ chính xác gần tương đương
     model = RandomForestRegressor(
-        n_estimators=120,
-        min_samples_leaf=3,
+        n_estimators=60,
+        min_samples_leaf=6,
+        max_depth=22,
         max_features="sqrt",
         n_jobs=-1,
         random_state=42,
