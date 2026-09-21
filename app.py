@@ -302,6 +302,16 @@ def route_score(route: RouteCandidate) -> Dict[str, Any]:
 
 # ============================== Endpoints ==============================
 
+@app.get("/")
+def root():
+    return {
+        "service": "TraffiGo ML Server",
+        "docs": "/docs",
+        "health": "/health",
+        "liveStatus": "/api/ml/live-status",
+    }
+
+
 @app.get("/health")
 def health():
     return {
@@ -333,12 +343,16 @@ def _load_tomtom_keys() -> List[str]:
 
 
 def _load_monitored_segments() -> List[Dict[str, Any]]:
-    """Đọc geometry.csv của app, lấy tối đa REFRESH_MAX_SEGMENTS đoạn đầu tiên.
-    Chỉ cần 5 cột đầu (tên đường + tọa độ hai đầu) — đứng trước cột geometry quoted
-    nên tách đơn giản bằng dấu phẩy là đủ. Điểm giám sát = trung bình hai đầu đoạn."""
+    """Đọc geometry.csv (ưu tiên bản nằm cùng repo server; fallback sang assets của app),
+    lấy tối đa REFRESH_MAX_SEGMENTS đoạn đầu tiên. Chỉ cần 5 cột đầu (tên đường + tọa độ
+    hai đầu) — đứng trước cột geometry quoted nên tách đơn giản bằng dấu phẩy là đủ.
+    Điểm giám sát = trung bình hai đầu đoạn."""
     segs = []
+    path = os.path.join(HERE, "geometry.csv")
+    if not os.path.exists(path):
+        path = GEOMETRY_CSV
     try:
-        with open(GEOMETRY_CSV, encoding="utf-8-sig") as f:
+        with open(path, encoding="utf-8-sig") as f:
             next(f)
             for line in f:
                 cols = line.split(",")
